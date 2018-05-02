@@ -20,12 +20,11 @@ class App {
         location.getPosition()
             .then(data => {
                 this.showMap(data);
+                this.setMarkerForBusStop();
             })
             .catch(error => {
                 console.log(error);
             });
-
-        this.setMarkerForBusStop();
     }
 
     setMarkerForBusStop() {
@@ -33,10 +32,28 @@ class App {
             .then(res => {
                 const list = res.ServiceResult.msgBody.itemList;
                 console.log(list);
+                var markerImageUrl = '/src/img/transparent.png', // 마커 이미지의 주소
+                    markerImageSize = new daum.maps.Size(24, 24), // 마커 이미지의 크기
+                    markerImageOptions = { 
+                        offset : new daum.maps.Point(12, 12)// 마커 좌표에 일치시킬 이미지 안의 좌표
+                    };
 
-                list.forEach((value) => {
-                    console.log(value);
+                list.forEach((stop) => {
+                    // console.log(stop);
+                    
+                    // 마커 이미지를 생성한다
+                    var markerImage = new daum.maps.MarkerImage(markerImageUrl, markerImageSize, markerImageOptions);
+                    var latitude = stop.gpsY;
+                    var longitude = stop.gpsX;
+
+                    // 지도에 마커를 생성하고 표시한다
+                    this.marker[stop.arsId] = new daum.maps.Marker({
+                        position: new daum.maps.LatLng(latitude, longitude),
+                        image: markerImage,
+                        map: this.map
+                    });
                 });
+                window.marker = this.marker;
             })
             .catch(error => {
                 console.log(error);
@@ -44,12 +61,18 @@ class App {
     }
 
     getBusStopData() {
-        const uri = new URL('http://ws.bus.go.kr/api/rest/stationinfo/getStationByPos');
+        // const uri = new URL('http://ws.bus.go.kr/api/rest/stationinfo/getStationByPos');
+        const uri = new URL('http://openapi.tago.go.kr/openapi/service/BusSttnInfoInqireService/getCrdntPrxmtSttnList');
+        // const params = {
+        //     serviceKey: keyPublicData,
+        //     tmX: 127.04233229999998,
+        //     tmY: 37.5474537,
+        //     radius: 300,
+        // }
         const params = {
             serviceKey: keyPublicData,
-            tmX: 127.04233229999998,
-            tmY: 37.5474537,
-            radius: 300,
+            gpsLong: 127.04233229999998,
+            gpsLati: 37.5474537,
         }
 
         // set params to url
@@ -85,6 +108,8 @@ class App {
                 center: new daum.maps.LatLng(latitude, longitude),
                 level: 3
             };
+
+            console.log(latitude, longitude);   
 
             this.map = new daum.maps.Map(container, optionsForMap);
 
