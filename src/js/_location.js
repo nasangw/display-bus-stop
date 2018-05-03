@@ -1,10 +1,6 @@
 export default class Loaction {
     constructor() {
-        this.init();
-    }
-
-    init() {
-        const getCP = navigator.geolocation.getCurrentPosition;
+        
     }
 
     getPosition() {
