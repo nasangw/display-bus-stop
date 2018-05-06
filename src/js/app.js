@@ -1,5 +1,6 @@
-import Location from './_location';
 import x2js from 'x2js/xml2json';
+import Location from './_location';
+import LayerBusStop from './_layerBusStop';
 
 const keyDataOrKr = 'KqC6MV8UsZrwWZNmdaDN34Ii7nC25rAqDtnNEPN40DSXAiHXIswyqPb/CPqhgmH2HORnAEYpSFsky8ExSyd1VA==';
 const apiURI = {
@@ -16,19 +17,20 @@ class App {
 
     init() {
         const location = new Location();
+        this.customLayer = new LayerBusStop();
 
         location.getPosition()
             .then(data => {
                 this.myLocationData = data;
-                this.showMap(data);
-                this.setMarkerForBusStop();
+                this.initMap(data);
+                this.setBusStop();
             })
             .catch(error => {
                 console.log(error);
             });
     }
 
-    showMap(info) {
+    initMap(info) {
         if(!info) {
             return;
         }
@@ -50,69 +52,70 @@ class App {
         });
     }
 
-    setMarkerForBusStop() {
+    setBusStop() {
         this.getDataForBusStop()
-            .then(res => {
-                const list = res.ServiceResult.msgBody.itemList;
+        .then(res => {
+            const list = res.ServiceResult.msgBody.itemList;
 
-                var markerImageUrl = this.imgBusStop, // 마커 이미지의 주소
-                    markerImageSize = new daum.maps.Size(24, 24), // 마커 이미지의 크기
-                    markerImageOptions = { 
-                        offset : new daum.maps.Point(12, 12)// 마커 좌표에 일치시킬 이미지 안의 좌표
-                    };
+            var markerImageUrl = this.imgBusStop, // 마커 이미지의 주소
+                markerImageSize = new daum.maps.Size(24, 24), // 마커 이미지의 크기
+                markerImageOptions = { 
+                    offset : new daum.maps.Point(12, 12)// 마커 좌표에 일치시킬 이미지 안의 좌표
+                };
 
-                list.forEach((stop) => {
-                    // 마커 이미지를 생성한다
-                    var markerImage = new daum.maps.MarkerImage(markerImageUrl, markerImageSize, markerImageOptions);
-                    var latitude = stop.gpsY;
-                    var longitude = stop.gpsX;
-                    var wtmX = stop.posX;
-                    var wtmY = stop.posY;
-                    var geocoder = new daum.maps.services.Geocoder();
-                    var transLat, transLng;
+            list.forEach(stop => {
+                // 마커 이미지를 생성한다
+                var markerImage = new daum.maps.MarkerImage(markerImageUrl, markerImageSize, markerImageOptions),
+                    latitude = stop.gpsY,
+                    longitude = stop.gpsX,
+                    wtmX = stop.posX,
+                    wtmY = stop.posY,
+                    geocoder = new daum.maps.services.Geocoder(),
+                    transLat, transLng, template;
 
-                    // geocoder.transCoord(wtmX, wtmY, (result, status) => {
-                    //     if(status === daum.maps.services.Status.OK) {
-                    //         transLat = result[0].y;
-                    //         transLng = result[0].x;
-
-                    //         this.markerBusStop[stop.arsId] = new daum.maps.Marker({
-                    //             position: new daum.maps.LatLng(transLat, transLng),
-                    //             image: markerImage,
-                    //             map: this.map
-                    //         });
-                    //     }
-                    // }, {
-                    //     input_coord: daum.maps.services.Coords.WTM,
-                    //     output_coord: daum.maps.services.Coords.WGS84,
-                    // });
-
-                    // 지도에 마커를 생성하고 표시한다
-                    this.markerBusStop[stop.arsId] = new daum.maps.Marker({
-                        position: new daum.maps.LatLng(latitude, longitude),
-                        image: markerImage,
-                        map: this.map
-                    });
-
-                    if(this.map.getLevel() > 3) {
-                        // return;
-                        this.showHideMarkerBusStop();
-                    }
-
-                    // zoom level이 4이상일 경우 버스정류장의 마커를 제거
-                    daum.maps.event.addListener(this.map, 'zoom_changed', () => {
-                        if(this.map.getLevel() >= 4) {
-                            this.showHideMarkerBusStop();
-                        }else {
-                            this.showHideMarkerBusStop(this.map);
-                        }
-                    });
+                // 지도에 마커를 생성하고 표시한다
+                this.markerBusStop[stop.arsId] = new daum.maps.Marker({
+                    position: new daum.maps.LatLng(latitude, longitude),
+                    image: markerImage,
+                    map: this.map
                 });
-                window.markerBusStop = this.markerBusStop;
-            })
-            .catch(error => {
-                console.log(error);
+
+                // generate customLayer for BusStop
+                this.setLayerForBusStop(stop);
+
+                // if mapLevel higher than 3, hide markerBusStop when init map
+                if(this.map.getLevel() > 3) {
+                    this.showHideMarkerBusStop();
+                }
+
+                // bind zoom_changed event: zoom level이 4이상일 경우 버스정류장의 마커를 제거
+                daum.maps.event.addListener(this.map, 'zoom_changed', () => {
+                    if(this.map.getLevel() >= 4) {
+                        this.showHideMarkerBusStop();
+                    }else {
+                        this.showHideMarkerBusStop(this.map);
+                    }
+                });
             });
+        })
+        .catch(error => {
+            console.log(error);
+        });
+    }
+
+    setLayerForBusStop(stop) {
+        if(!stop) {
+            return;
+        }
+
+        const template = this.customLayer.getTemplate(stop);
+
+        this.customLayer.setOverlay({
+            template, 
+            map: this.map, 
+            marker: this.markerBusStop[stop.arsId],
+            arsId: stop.arsId,
+        });
     }
 
     showHideMarkerBusStop(param) {
@@ -136,13 +139,6 @@ class App {
             radius: 500, // unit: meter
         }
 
-        // const uri = new URL('http://openapi.tago.go.kr/openapi/service/BusSttnInfoInqireService/getCrdntPrxmtSttnList');
-        // const params = {
-        //     serviceKey: keyDataOrKr,
-        //     gpsLong: 127.04233229999998,
-        //     gpsLati: 37.5474537,
-        // }
-
         // set params to url
         Object.keys(params).forEach(key => {
             uri.searchParams.append(key, params[key]);
@@ -163,6 +159,24 @@ class App {
             });
         });
     }
+
+    // transCoord() {
+    //     geocoder.transCoord(wtmX, wtmY, (result, status) => {
+    //         if(status === daum.maps.services.Status.OK) {
+    //             transLat = result[0].y;
+    //             transLng = result[0].x;
+
+    //             this.markerBusStop[stop.arsId] = new daum.maps.Marker({
+    //                 position: new daum.maps.LatLng(transLat, transLng),
+    //                 image: markerImage,
+    //                 map: this.map
+    //             });
+    //         }
+    //     }, {
+    //         input_coord: daum.maps.services.Coords.WTM,
+    //         output_coord: daum.maps.services.Coords.WGS84,
+    //     });
+    // }
 }
 
 const app = new App();
