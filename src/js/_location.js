@@ -1,7 +1,9 @@
-export default class Loaction {
-    constructor() {
-        
-    }
+import App from './app';
+
+export class Location extends App {
+    // constructor() {
+    //     console.log('in location');
+    // }
 
     getPosition() {
         if(!this.isGeolocationAvailable) {

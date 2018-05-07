@@ -1,33 +1,33 @@
 import x2js from 'x2js/xml2json';
-import Location from './_location';
-import LayerBusStop from './_layerBusStop';
+import { Location } from './_location';
+// import LayerBusStop from './_layerBusStop';
 
-const keyDataOrKr = 'KqC6MV8UsZrwWZNmdaDN34Ii7nC25rAqDtnNEPN40DSXAiHXIswyqPb/CPqhgmH2HORnAEYpSFsky8ExSyd1VA==';
-const apiURI = {
-    getStationByPos: 'http://ws.bus.go.kr/api/rest/stationinfo/getStationByPos',
-}
-
-class App {
+export default class App {
     constructor() {
         this.markerBusStop = {};
+        this.keyDataOrKr = 'KqC6MV8UsZrwWZNmdaDN34Ii7nC25rAqDtnNEPN40DSXAiHXIswyqPb/CPqhgmH2HORnAEYpSFsky8ExSyd1VA==';
+        this.apiURI = {
+            getStationByPos: 'http://ws.bus.go.kr/api/rest/stationinfo/getStationByPos',
+            getStationByUid: 'http://ws.bus.go.kr/api/rest/stationinfo/getStationByUid',
+        };
         this.imgBusStop = '/src/img/icon-bus.png';
         // this.imgBusStop = '/src/img/transparent.png';
         this.init();
     }
 
     init() {
-        const location = new Location();
-        this.customLayer = new LayerBusStop();
+        this.location = new Location();
+        // this.layerBusStop = new LayerBusStop();
 
-        location.getPosition()
-            .then(data => {
-                this.myLocationData = data;
-                this.initMap(data);
-                this.setBusStop();
-            })
-            .catch(error => {
-                console.log(error);
-            });
+        // this.location.getPosition()
+        //     .then(data => {
+        //         this.myLocationData = data;
+        //         this.initMap(data);
+        //         this.setBusStop();
+        //     })
+        //     .catch(error => {
+        //         console.log(error);
+        //     });
     }
 
     initMap(info) {
@@ -108,14 +108,16 @@ class App {
             return;
         }
 
-        const template = this.customLayer.getTemplate(stop);
+        // const template = this.layerBusStop.getTemplate(stop);
 
-        this.customLayer.setOverlay({
-            template, 
-            map: this.map, 
-            marker: this.markerBusStop[stop.arsId],
-            arsId: stop.arsId,
-        });
+        // this.layerBusStop.setOverlay({
+        //     template, 
+        //     map: this.map, 
+        //     marker: this.markerBusStop[stop.arsId],
+        //     arsId: stop.arsId,
+        // });
+        
+        // this.layerBusStop.getData(stop.arsId);
     }
 
     showHideMarkerBusStop(param) {
@@ -131,9 +133,9 @@ class App {
 
     getDataForBusStop() {
         const { latitude, longitude } = this.myLocationData.coords;
-        const uri = new URL(apiURI.getStationByPos);
+        const uri = new URL(this.apiURI.getStationByPos);
         const params = {
-            serviceKey: keyDataOrKr, // api Key
+            serviceKey: this.keyDataOrKr, // api Key
             tmX: longitude,
             tmY: latitude,
             radius: 500, // unit: meter
@@ -150,8 +152,8 @@ class App {
                 return res.text();
             })
             .then(res => {
-                const xml2js = new x2js();
-                const parseData = xml2js.xml_str2json(res);
+                this.xml2js = new x2js();
+                const parseData = this.xml2js.xml_str2json(res);
                 resolve(parseData);
             })
             .catch(error => {

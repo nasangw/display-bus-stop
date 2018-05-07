@@ -1,10 +1,14 @@
-export default class LayerBusStop {
+import { App } from './app';
+
+// export default class LayerBusStop extends App{
+export default class LayerBusStop{
     constructor() {
         this.overlayBusStop = {};
     }
 
     init() {
         // console.log('LayerBusStop Class');
+        
     }
 
     getTemplate(stop) {
@@ -18,9 +22,30 @@ export default class LayerBusStop {
                     <h2>${stop.stationNm}</h2>
                     <button type="button" class="btn btn__close-layer">닫기</button>
                 </div>
-                <p>${stop.stationId}</p>
+                <p>stationId: ${stop.stationId}</p>
+                <p>arsId: ${stop.arsId}</p>
             </div>
         `;
+    }
+
+    getData(arsId) {
+        const keyDataOrKr = 'KqC6MV8UsZrwWZNmdaDN34Ii7nC25rAqDtnNEPN40DSXAiHXIswyqPb/CPqhgmH2HORnAEYpSFsky8ExSyd1VA==';
+        const uri = `http://ws.bus.go.kr/api/rest/stationinfo/getStationByUid?serviceKey=${keyDataOrKr}&arsId=${arsId}`;
+        
+        return new Promise( (resolve, reject) => {
+            fetch(uri)
+            .then(res => {
+                // console.log(res);
+                return res.text();
+            })
+            .then(data => {
+                // console.log(data);
+                resolve(data);
+            })
+            .catch(err => {
+                reject(err);
+            });
+        } );
     }
 
     setOverlay(data) {
