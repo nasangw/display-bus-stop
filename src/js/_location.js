@@ -1,6 +1,6 @@
 import App from './app';
 
-export class Location extends App {
+export class Location {
     // constructor() {
     //     console.log('in location');
     // }

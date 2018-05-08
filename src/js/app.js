@@ -1,6 +1,6 @@
 import x2js from 'x2js/xml2json';
 import { Location } from './_location';
-// import LayerBusStop from './_layerBusStop';
+import { LayerBusStop } from './_layerBusStop';
 
 export default class App {
     constructor() {
@@ -17,17 +17,17 @@ export default class App {
 
     init() {
         this.location = new Location();
-        // this.layerBusStop = new LayerBusStop();
+        this.layerBusStop = new LayerBusStop();
 
-        // this.location.getPosition()
-        //     .then(data => {
-        //         this.myLocationData = data;
-        //         this.initMap(data);
-        //         this.setBusStop();
-        //     })
-        //     .catch(error => {
-        //         console.log(error);
-        //     });
+        this.location.getPosition()
+            .then(data => {
+                this.myLocationData = data;
+                this.initMap(data);
+                this.setBusStop();
+            })
+            .catch(error => {
+                console.log(error);
+            });
     }
 
     initMap(info) {
@@ -74,7 +74,7 @@ export default class App {
                     transLat, transLng, template;
 
                 // 지도에 마커를 생성하고 표시한다
-                this.markerBusStop[stop.arsId] = new daum.maps.Marker({
+                this.markerBusStop[stop.stationId] = new daum.maps.Marker({
                     position: new daum.maps.LatLng(latitude, longitude),
                     image: markerImage,
                     map: this.map
@@ -107,17 +107,18 @@ export default class App {
         if(!stop) {
             return;
         }
+        console.log(stop);
 
-        // const template = this.layerBusStop.getTemplate(stop);
+        const template = this.layerBusStop.getTemplate(stop);
 
-        // this.layerBusStop.setOverlay({
-        //     template, 
-        //     map: this.map, 
-        //     marker: this.markerBusStop[stop.arsId],
-        //     arsId: stop.arsId,
-        // });
+        this.layerBusStop.setOverlay({
+            template, 
+            map: this.map, 
+            marker: this.markerBusStop[stop.stationId],
+            stationId: stop.stationId,
+        });
         
-        // this.layerBusStop.getData(stop.arsId);
+        // this.layerBusStop.getData(stop.stationId);
     }
 
     showHideMarkerBusStop(param) {
@@ -138,7 +139,7 @@ export default class App {
             serviceKey: this.keyDataOrKr, // api Key
             tmX: longitude,
             tmY: latitude,
-            radius: 500, // unit: meter
+            radius: 1000, // unit: meter
         }
 
         // set params to url

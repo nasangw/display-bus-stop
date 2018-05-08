@@ -1,8 +1,9 @@
 import { App } from './app';
 
 // export default class LayerBusStop extends App{
-export default class LayerBusStop{
+export class LayerBusStop {
     constructor() {
+        // super();
         this.overlayBusStop = {};
     }
 
@@ -28,9 +29,18 @@ export default class LayerBusStop{
         `;
     }
 
-    getData(arsId) {
+    getData(stationId) {
         const keyDataOrKr = 'KqC6MV8UsZrwWZNmdaDN34Ii7nC25rAqDtnNEPN40DSXAiHXIswyqPb/CPqhgmH2HORnAEYpSFsky8ExSyd1VA==';
-        const uri = `http://ws.bus.go.kr/api/rest/stationinfo/getStationByUid?serviceKey=${keyDataOrKr}&arsId=${arsId}`;
+        const path = `http://ws.bus.go.kr/api/rest/stationinfo/getStationByUid`;
+        const uri = new URL(path);
+        const params = {
+            serviceKey: this.keyDataOrKr, // api Key
+            stationId,
+        }
+        // set params to url
+        Object.keys(params).forEach(key => {
+            uri.searchParams.append(key, params[key]);
+        });
         
         return new Promise( (resolve, reject) => {
             fetch(uri)
@@ -49,9 +59,9 @@ export default class LayerBusStop{
     }
 
     setOverlay(data) {
-        const { template, map, marker, arsId } = data;
+        const { template, map, marker, stationId } = data;
 
-        this.overlayBusStop[arsId] = new daum.maps.CustomOverlay({
+        this.overlayBusStop[stationId] = new daum.maps.CustomOverlay({
             content: template, 
             map: map, 
             position: marker.getPosition(), 
@@ -59,17 +69,17 @@ export default class LayerBusStop{
 
         // bind click event that show layer
         daum.maps.event.addListener(marker, 'click', function() {
-            this.overlayBusStop[arsId].setMap(map);
+            this.overlayBusStop[stationId].setMap(map);
         }.bind(this));
 
-        const elemOverlay = this.overlayBusStop[arsId].a;
+        const elemOverlay = this.overlayBusStop[stationId].a;
         const btnCloseLayer = elemOverlay.querySelector('.btn__close-layer');
 
         // bind click event that hide layer
         btnCloseLayer.addEventListener('click', ev => {
-            this.overlayBusStop[arsId].setMap(null);
+            this.overlayBusStop[stationId].setMap(null);
         });
         // and hide layer
-        this.overlayBusStop[arsId].setMap(null);
+        this.overlayBusStop[stationId].setMap(null);
     }
 }
