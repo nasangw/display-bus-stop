@@ -1,15 +1,8 @@
-import { App } from './app';
+import config from './Config';
 
-// export default class LayerBusStop extends App{
-export class LayerBusStop {
+export default class LayerBusStop {
     constructor() {
-        // super();
         this.overlayBusStop = {};
-    }
-
-    init() {
-        // console.log('LayerBusStop Class');
-        
     }
 
     getTemplate(stop) {
@@ -29,13 +22,12 @@ export class LayerBusStop {
         `;
     }
 
-    getData(stationId) {
-        const keyDataOrKr = 'KqC6MV8UsZrwWZNmdaDN34Ii7nC25rAqDtnNEPN40DSXAiHXIswyqPb/CPqhgmH2HORnAEYpSFsky8ExSyd1VA==';
-        const path = `http://ws.bus.go.kr/api/rest/stationinfo/getStationByUid`;
-        const uri = new URL(path);
+    getData(arsId) {
+        const uri = new URL(config.apiURI.getStationByUid);
         const params = {
-            serviceKey: this.keyDataOrKr, // api Key
-            stationId,
+            serviceKey: config.keyDataOrKr, // api Key
+            arsId,
+            // stationId,
         }
         // set params to url
         Object.keys(params).forEach(key => {

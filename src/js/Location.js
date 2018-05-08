@@ -1,10 +1,6 @@
-import App from './app';
+import config from './Config';
 
-export class Location {
-    // constructor() {
-    //     console.log('in location');
-    // }
-
+export default class Location {
     getPosition() {
         if(!this.isGeolocationAvailable) {
             return;
