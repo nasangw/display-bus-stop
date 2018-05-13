@@ -10,7 +10,6 @@
     "babel-preset-env": "^1.6.1",
     "css-loader": "^0.28.11",
     "extract-text-webpack-plugin": "^4.0.0-beta.0",
-    "http-server": "^0.11.1",
     "node-sass": "^4.9.0",
     "normalize.css": "^8.0.0",
     "sass-loader": "^7.0.1",
@@ -18,12 +17,14 @@
     "uglifyjs-webpack-plugin": "^1.2.5",
     "webpack": "^4.6.0",
     "webpack-cli": "^2.0.15",
+    "webpack-dev-server": "^3.1.4",
     "x2js": "git+https://github.com/abdmob/x2js.git"
   },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "webpack --watch"
+    "watch": "webpack --watch",
+    "dev": "webpack-dev-server --inline --hot"
   },
   "keywords": [],
   "author": "",
