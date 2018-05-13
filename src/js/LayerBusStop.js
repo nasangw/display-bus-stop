@@ -1,16 +1,10 @@
 import config from './Config';
 
 export default class LayerBusStop {
-    constructor() {
+    constructor(list) {
         this.overlayBusStop = {};
-        // this.init();
-    }
-
-    init() {
-        const ddd = this.getDataStop(stop.arsId);
-        ddd.then(res => {
-            console.log(res);
-        });
+        this.listBusStop = list;
+        console.log(this.listBusStop);
     }
 
     getTemplateLayer(stop) {
@@ -61,6 +55,18 @@ export default class LayerBusStop {
         } );
     }
 
+    setLayerForBusStop(data) {
+        if(!data) {
+            return;
+        }
+
+        const { stop, map, marker } = data;
+        const template = this.getTemplateLayer(stop);
+
+        this.setOverlay({ template, map, marker, stationId: stop.stationId });
+        // this.ttt(stop.arsId);
+    }
+
     setOverlay(data) {
         const { template, map, marker, stationId } = data;
 
@@ -90,8 +96,8 @@ export default class LayerBusStop {
     }
 
     ttt() {
-        const ddd = this.getDataStop(stop.arsId);
-        ddd.then(res => {
+        this.getDataStop(stop.arsId)
+        .then(res => {
             console.log(res);
             const arrayBusStop = res.msgBody.itemList;
             arrayBusStop.map((value, index) => {

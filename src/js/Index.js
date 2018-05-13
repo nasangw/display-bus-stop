@@ -7,7 +7,7 @@ export default class Index {
     constructor() {
         this.markerBusStop = {};
         this.locationBus = new Location();
-        this.layerBusStop = new LayerBusStop();
+        // this.layerBusStop = new LayerBusStop();
         this.init();
     }
 
@@ -15,25 +15,25 @@ export default class Index {
         this.locationBus.getPosition()
             .then(data => {
                 this.myLocationData = data;
-                this.initMap(data);
-                this.setBusStop();
+                this.generateMap(data);
+                this.setBusStopMarker();
             })
             .catch(error => {
                 console.log(error);
             });
     }
 
-    initMap(info) {
+    generateMap(info) {
         if(!info) {
             return;
         }
 
-        const { latitude, longitude } = info.coords;
-        const container = document.querySelector('#map');
-        const optionsForMap = {
-            center: new daum.maps.LatLng(latitude, longitude),
-            level: 3
-        };
+        const { latitude, longitude } = info.coords,
+            container = document.querySelector('#map'),
+            optionsForMap = {
+                center: new daum.maps.LatLng(latitude, longitude),
+                level: 3
+            };
 
         // generate map.
         this.map = new daum.maps.Map(container, optionsForMap);
@@ -45,26 +45,35 @@ export default class Index {
         });
     }
 
-    setBusStop() {
+    setBusStopMarker() {
         this.getDataForBusStop()
         .then(res => {
-            const list = res.ServiceResult.msgBody.itemList;
+            // arsId가 없는 정류소는 data에서 제외시킨다.
+            const filterData = res.ServiceResult.msgBody.itemList.filter(v => {
+                return v.arsId !== '0';
+            });
 
-            var markerImageUrl = config.imgBusStop, // 마커 이미지의 주소
+            return filterData;
+        })
+        .then(data => {
+            const markerImageUrl = config.imgBusStop, // 마커 이미지의 주소
                 markerImageSize = new daum.maps.Size(24, 24), // 마커 이미지의 크기
                 markerImageOptions = { 
                     offset : new daum.maps.Point(12, 12)// 마커 좌표에 일치시킬 이미지 안의 좌표
                 };
 
-            list.forEach(stop => {
+            this.layerBusStop = new LayerBusStop(data);
+
+            // loop busStop
+            data.forEach(stop => {
                 // 마커 이미지를 생성한다
-                var markerImage = new daum.maps.MarkerImage(markerImageUrl, markerImageSize, markerImageOptions),
+                const markerImage = new daum.maps.MarkerImage(markerImageUrl, markerImageSize, markerImageOptions),
                     latitude = stop.gpsY,
                     longitude = stop.gpsX,
                     wtmX = stop.posX,
                     wtmY = stop.posY,
-                    geocoder = new daum.maps.services.Geocoder(),
-                    transLat, transLng, template;
+                    geocoder = new daum.maps.services.Geocoder();
+                // var transLat, transLng, template;
 
                 // 지도에 마커를 생성하고 표시한다
                 this.markerBusStop[stop.stationId] = new daum.maps.Marker({
@@ -74,41 +83,29 @@ export default class Index {
                 });
 
                 // generate customLayer for BusStop
-                console.log(stop);
-                this.setLayerForBusStop(stop);
-
-                // if mapLevel higher than 3, hide markerBusStop when init map
-                if(this.map.getLevel() > 3) {
-                    this.showHideMarkerBusStop();
-                }
-
-                // bind zoom_changed event: zoom level이 4이상일 경우 버스정류장의 마커를 제거
-                daum.maps.event.addListener(this.map, 'zoom_changed', () => {
-                    if(this.map.getLevel() >= 4) {
-                        this.showHideMarkerBusStop();
-                    }else {
-                        this.showHideMarkerBusStop(this.map);
-                    }
+                this.layerBusStop.setLayerForBusStop({
+                    stop,
+                    map: this.map,
+                    marker: this.markerBusStop[stop.stationId],
                 });
+            });
+
+            // if mapLevel higher than 3, hide markerBusStop when init map
+            if(this.map.getLevel() > 3) {
+                this.showHideMarkerBusStop();
+            }
+
+            // bind zoom_changed event: zoom level이 4이상일 경우 버스정류장의 마커를 제거
+            daum.maps.event.addListener(this.map, 'zoom_changed', () => {
+                if(this.map.getLevel() >= 4) {
+                    this.showHideMarkerBusStop();
+                }else {
+                    this.showHideMarkerBusStop(this.map);
+                }
             });
         })
         .catch(error => {
             console.log(error);
-        });
-    }
-
-    setLayerForBusStop(stop) {
-        if(!stop) {
-            return;
-        }
-
-        const template = this.layerBusStop.getTemplateLayer(stop);
-
-        this.layerBusStop.setOverlay({
-            template, 
-            map: this.map, 
-            marker: this.markerBusStop[stop.stationId],
-            stationId: stop.stationId,
         });
     }
 
