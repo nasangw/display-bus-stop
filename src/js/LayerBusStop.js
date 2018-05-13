@@ -3,9 +3,17 @@ import config from './Config';
 export default class LayerBusStop {
     constructor() {
         this.overlayBusStop = {};
+        // this.init();
     }
 
-    getTemplate(stop) {
+    init() {
+        const ddd = this.getDataStop(stop.arsId);
+        ddd.then(res => {
+            console.log(res);
+        });
+    }
+
+    getTemplateLayer(stop) {
         if(!stop) {
             return;
         }
@@ -18,11 +26,12 @@ export default class LayerBusStop {
                 </div>
                 <p>stationId: ${stop.stationId}</p>
                 <p>arsId: ${stop.arsId}</p>
+                <ul id="stopId-${stop.stationId}" class="list"></ul>
             </div>
         `;
     }
 
-    getData(arsId) {
+    getDataStop(arsId) {
         const uri = new URL(config.apiURI.getStationByUid);
         const params = {
             serviceKey: config.keyDataOrKr, // api Key
@@ -41,8 +50,10 @@ export default class LayerBusStop {
                 return res.text();
             })
             .then(data => {
-                // console.log(data);
-                resolve(data);
+                this.xml2js = new config.x2js();
+                const parseData = this.xml2js.xml_str2json(data);
+                resolve(parseData);
+                // resolve(data);
             })
             .catch(err => {
                 reject(err);
@@ -73,5 +84,20 @@ export default class LayerBusStop {
         });
         // and hide layer
         this.overlayBusStop[stationId].setMap(null);
+
+        // next step
+        // this.ttt();
+    }
+
+    ttt() {
+        const ddd = this.getDataStop(stop.arsId);
+        ddd.then(res => {
+            console.log(res);
+            const arrayBusStop = res.msgBody.itemList;
+            arrayBusStop.map((value, index) => {
+                console.log(value);
+                console.log(index);
+            })
+        });
     }
 }

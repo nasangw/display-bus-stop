@@ -74,6 +74,7 @@ export default class Index {
                 });
 
                 // generate customLayer for BusStop
+                console.log(stop);
                 this.setLayerForBusStop(stop);
 
                 // if mapLevel higher than 3, hide markerBusStop when init map
@@ -101,7 +102,7 @@ export default class Index {
             return;
         }
 
-        const template = this.layerBusStop.getTemplate(stop);
+        const template = this.layerBusStop.getTemplateLayer(stop);
 
         this.layerBusStop.setOverlay({
             template, 
@@ -109,8 +110,6 @@ export default class Index {
             marker: this.markerBusStop[stop.stationId],
             stationId: stop.stationId,
         });
-        
-        this.layerBusStop.getData(stop.arsId);
     }
 
     showHideMarkerBusStop(param) {
@@ -131,7 +130,7 @@ export default class Index {
             serviceKey: config.keyDataOrKr, // api Key
             tmX: longitude,
             tmY: latitude,
-            radius: 1000, // unit: meter
+            radius: 300, // unit: meter
         }
 
         // set params to url
