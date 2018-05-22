@@ -37,6 +37,8 @@ export default class Index {
 
         // generate map.
         this.map = new daum.maps.Map(container, optionsForMap);
+        // 아래 window객체에 할당한 내용은 state기능으로 대체될 예정.
+        window.thisMap = this.map;
 
         // 지도에 현재위치를 생성하고 표시한다
         this.markerHere = new daum.maps.Marker({

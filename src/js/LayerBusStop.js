@@ -61,29 +61,42 @@ export default class LayerBusStop {
         const { stop, map, marker } = data;
         const template = this.getTemplateLayer(stop);
         const arsId = stop.arsId;
+        const gps = {
+            x: data.stop.gpsX,
+            y: data.stop.gpsY,
+        }
 
-        this.setOverlay({ template, arsId, map, marker, stationId: stop.stationId });
+        this.setOverlay({ template, arsId, map, marker, stationId: stop.stationId, gps });
     }
 
     setOverlay(data) {
         const { template, arsId, map, marker, stationId } = data;
-
         this.overlayBusStop[stationId] = new daum.maps.CustomOverlay({
             content: template, 
             map: map, 
             position: marker.getPosition(), 
         });
+        const elemOverlay = this.overlayBusStop[stationId].a;
+        const btnCloseLayer = elemOverlay.querySelector('.btn__close-layer');
 
         // bind click event that show layer
         daum.maps.event.addListener(marker, 'click', function() {
+            if(this.activeOverlayBusStop) {
+                this.overlayBusStop[this.activeOverlayBusStop].setMap(null);
+            }
+            // 버스정류소 레이어팝업 open
             this.overlayBusStop[stationId].setMap(map);
+
+            // 지도 이동
+            const moveLatLng = new daum.maps.LatLng(data.gps.y, data.gps.x);
+            window.thisMap.panTo(moveLatLng);
+
+            // 현재 활성화된 버스정류소 value 지정
+            this.activeOverlayBusStop = stationId;
 
             // next step
             this.setTemplateArrivalInfo(arsId);
         }.bind(this));
-
-        const elemOverlay = this.overlayBusStop[stationId].a;
-        const btnCloseLayer = elemOverlay.querySelector('.btn__close-layer');
 
         // bind click event that hide layer
         btnCloseLayer.addEventListener('click', ev => {
@@ -92,7 +105,9 @@ export default class LayerBusStop {
 
             // hide overlay
             this.overlayBusStop[stationId].setMap(null);
+            this.activeOverlayBusStop = false;
         });
+
         // and hide layer
         this.overlayBusStop[stationId].setMap(null);
     }
