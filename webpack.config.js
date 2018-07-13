@@ -10,15 +10,19 @@ module.exports = {
             './src/js/app.js',
             './src/sass/app.scss',
         ]
-        // js_lib: ["jquery", "bootstrap", "underscore"],
+    },
+    devServer: {
+        historyApiFallback: true,
+        inline: true,
+        hot: true,
+        contentBase: './public',
     },
     output: {
         filename: '[name].js',
-        path: path.join(__dirname, './dist/js')
+        // path: path.join(__dirname, './dist/js')
+        path: path.join(__dirname, 'public')
     },
     mode: 'development',
-    // devtool: '#inline-source-map',
-    devtool: "cheap-module-eval-source-map",
     resolve: {
         modules: ["./node_modules"]
     },
@@ -30,7 +34,13 @@ module.exports = {
                 use: {
                     loader: 'babel-loader',
                     options: {
-                        presets: ['env']
+                        presets: [
+                            ['env', {
+                                'targets': {
+                                    'browsers': ['last 2 versions', 'IE > 10']
+                                }
+                            }]
+                        ]
                     }
                 }
             },
@@ -44,7 +54,9 @@ module.exports = {
         ]
     },
     plugins: [
-        new ExtractTextPlugin('../css/[name].css'),
+        new webpack.HotModuleReplacementPlugin(),
+        // new ExtractTextPlugin('../css/[name].css'),
+        new ExtractTextPlugin(path.resolve(__dirname, 'public/[name].css')),
         // new webpack.ProvidePlugin({
         //     $: "jquery",
         //     jQuery: "jquery"

@@ -9,11 +9,13 @@ export default class Index {
         this.locationBus = new Location();
         // this.layerBusStop = new LayerBusStop();
         this.init();
+        console.log(123123);
     }
 
     init() {
         this.locationBus.getPosition()
             .then(data => {
+                console.log(data);
                 this.myLocationData = data;
                 this.generateMap(data);
                 this.setBusStopMarker();
