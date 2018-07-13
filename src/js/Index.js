@@ -9,7 +9,6 @@ export default class Index {
         this.locationBus = new Location();
         // this.layerBusStop = new LayerBusStop();
         this.init();
-        console.log(123123);
     }
 
     init() {
@@ -30,7 +29,9 @@ export default class Index {
             return;
         }
 
-        const { latitude, longitude } = info.coords,
+        // const { latitude, longitude } = info.coords,
+        const latitude = 37.56609,
+            longitude = 126.97836,
             container = document.querySelector('#map'),
             optionsForMap = {
                 center: new daum.maps.LatLng(latitude, longitude),
@@ -125,13 +126,15 @@ export default class Index {
     }
 
     getDataForBusStop() {
-        const { latitude, longitude } = this.myLocationData.coords;
+        // const { latitude, longitude } = this.myLocationData.coords;
+        const latitude = 37.56609;
+        const longitude = 126.97836;
         const uri = new URL(config.apiURI.getStationByPos);
         const params = {
             serviceKey: config.keyDataOrKr, // api Key
             tmX: longitude,
             tmY: latitude,
-            radius: 300, // unit: meter
+            radius: 500, // unit: meter
         }
 
         // set params to url

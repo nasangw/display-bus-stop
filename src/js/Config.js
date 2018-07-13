@@ -8,7 +8,7 @@ class Config {
             getStationByUid: 'http://ws.bus.go.kr/api/rest/stationinfo/getStationByUid',
         };
         this.x2js = x2js;
-        this.imgBusStop = '/src/img/icon-bus.png';
+        this.imgBusStop = '/img/icon-bus.png';
         // this.imgBusStop = '/src/img/transparent.png';
 
         if(!Config.instance) {
