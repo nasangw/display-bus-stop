@@ -16,6 +16,18 @@ module.exports = {
         inline: true,
         hot: true,
         contentBase: './public',
+        headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+            "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization"
+        },
+        // Send API requests on localhost to API server get around CORS.
+        proxy: {
+            '/api/**': {
+                target: 'http://ws.bus.go.kr',
+                secure: false,
+            }
+        }
     },
     output: {
         filename: '[name].js',
