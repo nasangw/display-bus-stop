@@ -1,7 +1,7 @@
-// import x2js from 'x2js/xml2json';
 import Location from './Location';
 import LayerBusStop from './LayerBusStop';
-import config from './Config';
+// import config from './Config';
+import config from '../../Config.mjs';
 
 export default class Index {
     constructor() {
@@ -13,10 +13,10 @@ export default class Index {
 
     init() {
         this.locationBus.getPosition()
-            .then(data => {
-                console.log(data);
-                this.myLocationData = data;
-                this.generateMap(data);
+            .then(pos => {
+                console.log(pos.coords);
+                this.myLocationPos = pos;
+                this.generateMap(pos);
                 this.setBusStopMarker();
             })
             .catch(error => {
@@ -29,17 +29,16 @@ export default class Index {
             return;
         }
 
-        // const { latitude, longitude } = info.coords,
-        const latitude = 37.56609,
-            longitude = 126.97836,
-            container = document.querySelector('#map'),
+        const { latitude, longitude } = info.coords;
+        const container = document.querySelector('#map'),
             optionsForMap = {
                 center: new daum.maps.LatLng(latitude, longitude),
-                level: 3
+                level: 3,
             };
 
         // generate map.
         this.map = new daum.maps.Map(container, optionsForMap);
+
         // 아래 window객체에 할당한 내용은 state기능으로 대체될 예정.
         window.thisMap = this.map;
 
@@ -53,8 +52,8 @@ export default class Index {
     setBusStopMarker() {
         this.getDataForBusStop()
         .then(res => {
-            // arsId가 없는 정류소는 data에서 제외시킨다.
-            const filterData = res.ServiceResult.msgBody.itemList.filter(v => {
+            const filterData = res.msgBody.itemList.filter(v => {
+                // arsId가 없는 정류소는 data에서 제외시킨다.
                 return v.arsId !== '0';
             });
 
@@ -126,14 +125,18 @@ export default class Index {
     }
 
     getDataForBusStop() {
-        // const { latitude, longitude } = this.myLocationData.coords;
-        const latitude = 37.56609;
-        const longitude = 126.97836;
-        const uri = new URL(config.apiURI.getStationByPos);
+        const urlForGetStation = `http://${location.hostname}:${config.apiURI.getStationPort}`;
+        const { latitude, longitude } = this.myLocationPos.coords;
+        // const latitude = 37.56609;
+        // const longitude = 126.97836;
+        // const uri = new URL(config.apiURI.getStationByPos);
+        const uri = new URL(urlForGetStation);
         const params = {
-            serviceKey: config.keyDataOrKr, // api Key
-            tmX: longitude,
-            tmY: latitude,
+            // serviceKey: config.keyDataOrKr,
+            // tmX: longitude,
+            // tmY: latitude,
+            lng: longitude,
+            lat: latitude,
             radius: 500, // unit: meter
         }
 
@@ -148,9 +151,8 @@ export default class Index {
                 return res.text();
             })
             .then(res => {
-                this.xml2js = new config.x2js();
-                const parseData = this.xml2js.xml_str2json(res);
-                resolve(parseData);
+                const jsonResponse = JSON.parse(res);
+                resolve(jsonResponse['ServiceResult']);
             })
             .catch(error => {
                 reject(error);

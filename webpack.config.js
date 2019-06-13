@@ -27,7 +27,8 @@ module.exports = {
                 target: 'http://ws.bus.go.kr',
                 secure: false,
             }
-        }
+        },
+        // port: 8888,
     },
     output: {
         filename: '[name].js',

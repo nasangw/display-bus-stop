@@ -1,4 +1,5 @@
-import config from './Config';
+// import config from './Config';
+import config from '../../Config.mjs';
 
 export default class LayerBusStop {
     constructor(list) {

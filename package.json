@@ -8,23 +8,26 @@
     "babel-eslint": "^8.2.3",
     "babel-loader": "^7.1.4",
     "babel-preset-env": "^1.6.1",
+    "cors": "^2.8.5",
     "css-loader": "^0.28.11",
     "extract-text-webpack-plugin": "^4.0.0-beta.0",
-    "node-sass": "^4.9.0",
+    "node-fetch": "^2.6.0",
     "normalize.css": "^8.0.0",
     "sass-loader": "^7.0.1",
     "style-loader": "^0.21.0",
     "uglifyjs-webpack-plugin": "^1.2.5",
-    "webpack": "^4.6.0",
-    "webpack-cli": "^2.0.15",
-    "webpack-dev-server": "^3.1.4",
-    "x2js": "git+https://github.com/abdmob/x2js.git"
+    "webpack": "^4.34.0",
+    "webpack-cli": "^3.3.4",
+    "webpack-dev-server": "^3.7.1",
+    "xml-js": "^1.6.11",
+    "node-sass": "^4.12.0"
   },
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "webpack --watch",
-    "dev": "webpack-dev-server --inline --hot"
+    "webpack-dev": "webpack-dev-server --inline --hot",
+    "dev": "npm run webpack-dev > /dev/null | npm run get-api",
+    "get-api": "node --experimental-modules server.mjs"
   },
   "keywords": [],
   "author": "",
