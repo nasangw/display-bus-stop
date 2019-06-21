@@ -21,14 +21,6 @@ module.exports = {
             "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
             "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization"
         },
-        // Send API requests on localhost to API server get around CORS.
-        proxy: {
-            '/api/**': {
-                target: 'http://ws.bus.go.kr',
-                secure: false,
-            }
-        },
-        // port: 8888,
     },
     output: {
         filename: '[name].js',
