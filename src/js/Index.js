@@ -125,16 +125,10 @@ export default class Index {
     }
 
     getDataForBusStop() {
-        const urlForGetStation = `http://${location.hostname}:${config.apiURI.getStationPort}`;
+        const urlForGetStation = `http://${location.hostname}:${config.apiURI.getStationPort}/getStationByPos`;
         const { latitude, longitude } = this.myLocationPos.coords;
-        // const latitude = 37.56609;
-        // const longitude = 126.97836;
-        // const uri = new URL(config.apiURI.getStationByPos);
         const uri = new URL(urlForGetStation);
         const params = {
-            // serviceKey: config.keyDataOrKr,
-            // tmX: longitude,
-            // tmY: latitude,
             lng: longitude,
             lat: latitude,
             radius: 500, // unit: meter

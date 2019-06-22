@@ -25,8 +25,10 @@ export default class LayerBusStop {
         `;
     }
 
-    getDataStop(arsId) {
-        const uri = new URL(config.apiURI.getStationByUid);
+    getStationData(arsId) {
+        const urlGetBusData = `http://${location.hostname}:${config.apiURI.getStationPort}/getStationByUid`;
+        // const uri = new URL(config.apiURI.getStationByUid);
+        const uri = new URL(urlGetBusData);
         const params = {
             serviceKey: config.keyDataOrKr, // api Key
             arsId,
@@ -40,13 +42,11 @@ export default class LayerBusStop {
         return new Promise( (resolve, reject) => {
             fetch(uri)
             .then(res => {
-                // console.log(res);
                 return res.text();
             })
-            .then(data => {
-                this.xml2js = new config.x2js();
-                const parseData = this.xml2js.xml_str2json(data);
-                resolve(parseData.ServiceResult.msgBody);
+            .then(res => {
+                const jsonResponse = JSON.parse(res);
+                resolve(jsonResponse['ServiceResult'] || jsonResponse);
             })
             .catch(err => {
                 reject(err);
@@ -160,24 +160,34 @@ export default class LayerBusStop {
     }
 
     setTemplateArrivalInfo(arsId) {
-        this.getDataStop(arsId)
-        .then(data => {
-            const arrayArrivalInfo = data.itemList.length ? data.itemList : undefined;
+        this.getStationData(arsId)
+        .then(res => {
+            var template;
             const elem = document.querySelector(`#stop-${arsId}`);
 
-            if(arrayArrivalInfo) {
-                const rrr = `
-                    ${arrayArrivalInfo.map(info => `
-                        <li class="bus">
-                            <span class="bus__routeType">${this.getSwitchRouteType(info.routeType)}</span>
-                            <span class="bus__number">${info.rtNm}</span>
-                            <span class="bus__direction">(${info.adirection} 방면)</span>
-                            <span class="bus__message">${info.arrmsg1}</span>
-                        </li>
-                    `).join('')}
-                `;
-                elem.innerHTML = rrr;
+            if(res.msgHeader.headerCd === 0) {
+                // 버스노선이 1개일 경우 API(xml-js)에서 array로 감싼 후 객체를 리턴하지 않고 곧바로 객체로 리턴하는 이슈.
+                const arrayArrivalInfo = res.msgBody.itemList.length ? res.msgBody.itemList : new Array(res.msgBody.itemList);
+
+                if(Array.isArray(arrayArrivalInfo)) {
+                    template = `
+                        ${arrayArrivalInfo.map(info => `
+                            <li class="bus">
+                                <span class="bus__routeType">${this.getSwitchRouteType(info.routeType)}</span>
+                                <span class="bus__number">${info.rtNm}</span>
+                                <span class="bus__direction">(${info.adirection} 방면)</span>
+                                <span class="bus__message">${info.arrmsg1}</span>
+                            </li>
+                        `).join('')}
+                    `;
+                }
+            }else {
+                // 결과 없음
+                template = `<p>관련 정보가 없습니다.</p>`;
             }
+
+            // set DOM
+            elem.innerHTML = template;
         })
         .catch(err => {
             return

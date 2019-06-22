@@ -1,42 +1,46 @@
-import config from './Config.mjs';
+import express from 'express';
 import convert from 'xml-js';
 import fetch from "node-fetch";
-import express from 'express';
 import cors from 'cors';
+import config from './Config.mjs';
 
 const app = express();
-const api = {
-  keyDataOrKr: 'KqC6MV8UsZrwWZNmdaDN34Ii7nC25rAqDtnNEPN40DSXAiHXIswyqPb%2FCPqhgmH2HORnAEYpSFsky8ExSyd1VA%3D%3D',
-  getStationByPos: 'http://ws.bus.go.kr/api/rest/stationinfo/getStationByPos',
-  getStationByUid: 'http://ws.bus.go.kr/api/rest/stationinfo/getStationByUid',
-};  
-const params = {
-  serviceKey: api.keyDataOrKr, // api Key
-  // tmX: 126.97836, // longitude
-  // tmY: 37.56609, // latitude
-  radius: 500, // unit: meter
-}
-
-// const uri = 'https://api.github.com/users/github';
+const xmlConvertOptions = {
+  // convert options
+  // nativeType: true <-- removeJsonTextAttribute함수에 의해 자동 적용
+  spaces: 2,
+  compact: true,
+  trim: true,
+  ignoreDeclaration: true,
+  ignoreInstruction: true,
+  ignoreAttributes: true,
+  ignoreComment: true,
+  ignoreCdata: true,
+  ignoreDoctype: true,
+  textFn: removeJsonTextAttribute
+};
 
 
 // CORS 설정
 app.use(cors());
 
-
-// router.get("/", (req, res) => {
-app.get("/", (req, res) => {
+// 주변 버스정류장 리스트를 받아온다.
+app.get("/getStationByPos", (req, res) => {
   var isFormatXml;
 
   // URL QueryString값을 params객체에 적용
-  params.tmX = req.query.lng;
-  params.tmY = req.query.lat;
+  const params = {
+    serviceKey: config.keyDataOrKr, // api Key
+    tmX: req.query.lng,
+    tmY: req.query.lat,
+    radius: req.query.radius,
+  };
 
   // uri는 버스정류장 데이터URL과 params객체값을 queryString으로 적용해 string값을 리턴한다.
-  const uri = getUrlCombineParam(api.getStationByPos, params);
+  const uri = getUrlByCombineParam(config.apiURI.getStationByPos, params);
 
-	fetch(uri).then(response => {
-	// fetch(ttt).then(response => {
+  fetch(uri)
+  .then(response => {
     const ct = response.headers.get("content-type").toLowerCase();
 
     if(ct.indexOf('/json') > -1) {
@@ -53,20 +57,54 @@ app.get("/", (req, res) => {
   })
   .then(result => {
     if(isFormatXml) {
-      result = convert.xml2json(result, {
-        // convert options
-        // nativeType: true <-- removeJsonTextAttribute함수에 의해 자동 적용
-        spaces: 2,
-        compact: true,
-        trim: true,
-        ignoreDeclaration: true,
-        ignoreInstruction: true,
-        ignoreAttributes: true,
-        ignoreComment: true,
-        ignoreCdata: true,
-        ignoreDoctype: true,
-        textFn: removeJsonTextAttribute
-      });
+      result = convert.xml2json(result, xmlConvertOptions);
+
+      // reset isFormatXml variable
+      isFormatXml = undefined;
+    }
+
+    res.status(200).send(result);
+  })
+  .catch(() => {
+    // console.log('occur error');
+    res.send(JSON.stringify({ message: "System Error" }));
+  });
+});
+
+// 버스정류장의 버스도착 데이터를 받아온다.
+app.get("/getStationByUid", (req, res) => {
+  var isFormatXml;
+
+  // URL QueryString값을 params객체에 적용
+  const params = {
+    serviceKey: config.keyDataOrKr, // api Key
+    arsId: req.query.arsId.length < 5 ? `0${req.query.arsId}` : req.query.arsId,
+    // arsId: req.query.arsId,
+  };
+
+  // uri는 버스정류장 데이터URL과 params객체값을 queryString으로 적용해 string값을 리턴한다.
+  const uri = getUrlByCombineParam(config.apiURI.getStationByUid, params);
+  // console.log(uri);
+
+  fetch(uri)
+  .then(response => {
+    const ct = response.headers.get("content-type").toLowerCase();
+
+    if(ct.indexOf('/json') > -1) {
+      // for JSON format
+      return response.json();
+    }else if(ct.indexOf('/xml') > -1) {
+      // for XML format
+      isFormatXml = true;
+      return response.text();
+    }else {
+      // for PLAIN or ETC
+      return response.text();
+    }
+  })
+  .then(result => {
+    if(isFormatXml) {
+      result = convert.xml2json(result, xmlConvertOptions);
 
       // reset isFormatXml variable
       isFormatXml = undefined;
@@ -88,8 +126,7 @@ app.listen(config.apiURI.getStationPort);
 /***************
  * 관련 함수
 ***************/
-
-function getUrlCombineParam(str, params) {
+function getUrlByCombineParam(str, params) {
   if(!str.length || !Object.keys(params).length) {
     return;
   }
@@ -101,8 +138,7 @@ function getUrlCombineParam(str, params) {
   return str;
 }
 
-
-function nativeType(value) {
+function getNativeType(value) {
   var nValue = Number(value);
   if (!isNaN(nValue)) {
     return nValue;
@@ -120,6 +156,6 @@ function removeJsonTextAttribute(value, parentElement) {
   try {
     var keyNo = Object.keys(parentElement._parent).length;
     var keyName = Object.keys(parentElement._parent)[keyNo - 1];
-    parentElement._parent[keyName] = nativeType(value);
+    parentElement._parent[keyName] = getNativeType(value);
   } catch (e) {}
 }
